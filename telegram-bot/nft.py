@@ -23,6 +23,17 @@ import uuid
 
 logging.basicConfig(level=logging.INFO)
 
+def get_db_connection():
+    return pymysql.connect(
+        host="",
+        user="",
+        password="",
+        database="",
+        charset="utf8mb4",
+        cursorclass=pymysql.cursors.DictCursor,
+        autocommit=True
+    )
+
 def base36decode(s):
     try:
         return int(s, 36)
@@ -31,6 +42,7 @@ def base36decode(s):
 
 async def log_error(context, error_message):
     logging.error(f"Произошла ошибка: {error_message}")
+    # Отправка уведомления в админ-чат (если нужно)
     await context.bot.send_message(chat_id=588896602, text=f"Ошибка: {error_message}")
 
 from telegram.error import TimedOut, NetworkError
@@ -38,48 +50,46 @@ import asyncio
 
 async def send_telegram_message(context, chat_id, text):
     try:
+        # Отправляем сообщение в чат
         await context.bot.send_message(chat_id=chat_id, text=text)
     except TimedOut:
         print("Запрос к API Telegram завершился по таймауту.")
-        await asyncio.sleep(5)
-        await send_telegram_message(context, chat_id, text)
+        await asyncio.sleep(5)  # Ждём 5 секунд и пробуем снова
+        await send_telegram_message(context, chat_id, text)  # Повторная попытка
     except NetworkError as ne:
         print(f"Ошибка сети при отправке сообщения: {ne}")
+        # Можно добавить повторную попытку или уведомление об ошибке
     except Exception as e:
         print(f"Неизвестная ошибка: {e}")
 
 import time
 
-ADMIN_CHAT_ID = 588896602
+ADMIN_CHAT_ID = 588896602  # Замените на ваш реальный идентификатор админ-чата
 
 import asyncio
-import datetime
-import pymysql
-
-def get_db_connection():
-    return pymysql.connect(
-        host='217.114.8.21',
-        user='myuser',
-        password='MyP@ssw0rd!',
-        db='nft',
-        charset='utf8mb4',
-        cursorclass=pymysql.cursors.DictCursor
-    )
+import datetime  # Добавьте этот импорт
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     telegram_id = str(user.id)
 
+    # Проверяем, не является ли чат группой
     if update.message and update.message.chat.type in ["group", "supergroup"]:
         await update.message.reply_text(
             "Пожалуйста, используйте команду /start в личном сообщении со мной."
         )
         return
+    # Проверяем подписку пользователя
+    #subscribed = await check_subscription(update, context)
+    #if not subscribed:
+    #    return  # Пользователь не подписан, прекращаем выполнение
+
+    # Подключаемся к базе данных
     conn = get_db_connection()
     cursor = conn.cursor()
 
     # Проверяем, есть ли пользователь уже в таблице
-    cursor.execute('SELECT telegram_id FROM users WHERE telegram_id = %s', (telegram_id,))
+    cursor.execute('SELECT telegram_id FROM users WHERE telegram_id = ?', (telegram_id,))
     existing_user = cursor.fetchone()
 
     if existing_user:
@@ -155,15 +165,23 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Ошибка кодирования ID: {ve}")
         return
     shopurl = f"https://fluxgifts.ru.tuna.am/user/{obfuscated_id}"
+    channel_url = "https://t.me/sickboips"
+    chat_url = "https://t.me/sickboips"  # <-- замените на реальную ссылку вашего чата
+    support_url = "https://t.me/sickboips"
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT telegram_id FROM admins WHERE telegram_id = %s', (str(user.id),))
+    cursor.execute('SELECT telegram_id FROM admins WHERE telegram_id = ?', (str(user.id),))
     is_admin = cursor.fetchone() is not None
     conn.close()
 
     # Формируем клавиатуру
     keyboard = [
+        [InlineKeyboardButton("Открыть маркет", web_app=WebAppInfo(url=shopurl))],
+        [InlineKeyboardButton("Информация", callback_data="info")],
+        [InlineKeyboardButton("Подписаться на канал", url=channel_url)],
+        [InlineKeyboardButton("Присоединиться к чату", url=chat_url)],
+        [InlineKeyboardButton("Написать менеджеру", url=support_url)],
     ]
     if is_admin:
         admin_url = f"https://fluxgifts.ru.tuna.am/admin/{obfuscated_id}"
@@ -177,11 +195,13 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = await update.callback_query.message.reply_photo(
             photo=image_url,
             caption="Для того, чтобы открыть маркет, нажми OPEN снизу!",
+            reply_markup=reply_markup
         )
     else:
         message = await update.message.reply_photo(
             photo=image_url,
             caption="Для того, чтобы открыть маркет, нажми OPEN снизу!",
+            reply_markup=reply_markup
         )
     if 'last_message' in context.user_data:
         try:
@@ -196,17 +216,29 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    if query.data == 'main_menu':
+    if query.data == 'check_subscription':
+        await check_subscription(update, context)
+    elif query.data == 'main_menu':
         await main_menu(update, context)
+    elif query.data == 'info':
+        await query.message.reply_text(
+            "ℹ️ Информация о маркете:\n"
+            "Здесь вы можете покупать и продавать NFT-подарки. Всё просто и безопасно!"
+        )
     elif query.data == 'start':
         await start(update, context)
 
 async def main_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-    if query.data == 'main_menu':
+    if query.data == 'my_orders':
+        await my_orders(update, context)
+    elif query.data == 'draw':
+        await draw(update, context)
+    elif query.data == 'main_menu':
         await main_menu(update, context)
 
+# Блок (25 шт.) - выбор товаров для блока
 import datetime
 import pytz
 import numpy as np
@@ -216,16 +248,45 @@ import os
 import calendar
 from telegram import Update
 from telegram.ext import ContextTypes
+orderschat = 588896602  # Приводим к целому числу # Приводим к целому числу
 
 async def user_response_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     logging.info(f"Message from {user_id}")
     
+    # Если это групповой чат, выходим
     if update.message.chat.type in ["group", "supergroup"]:
         return
 
+    # Проверяем, ждём ли мы ответ для рассылки "не оформили заказ"
+    if 'awaiting_responses' in context.bot_data and context.bot_data['awaiting_responses'].get(user_id):
+        # Старая логика (как в send_broadcast)
+        try:
+            # Пересылаем сообщение администратору
+            await context.bot.forward_message(chat_id=ADMIN_CHAT_ID2, from_chat_id=update.effective_chat.id, message_id=update.message.message_id)
+            logging.info(f"Message {user_id} reposted to admin (broadcast).")
+
+            # Убираем пользователя из ожидания
+            context.bot_data['awaiting_responses'][user_id] = False
+            await update.message.reply_text("Ваше сообщение отправлено администрации. Спасибо!")
+
+        except Exception as e:
+            logging.error(f"Error broadcast-message {user_id}: {e}")
+            await update.message.reply_text("Произошла ошибка при отправке вашего сообщения. Попробуйте позже.")
+        return
+
+    # Если мы попадаем сюда - значит пользователь что-то написал, но мы не ждём от него ответа
+    # Можно просто игнорировать или ответить
+    logging.info(f"Message {user_id} not in 'responses' and 'wishes'.")
+        # --- Вызов ChatGPT ---
+    user_text = update.message.text.strip()
+    chatgpt_answer = generate_chatgpt_response(user_text)
+
+    # --- Отправка ответа пользователю ---
+    await update.message.reply_text(chatgpt_answer)
+
 def main():
-    application = ApplicationBuilder().token("8065763008:AAFcU7P5NRzwtjm_eXXhlUf4zkEXnoy0S9w").build()
+    application = ApplicationBuilder().token("xxx").build()
 
     application.add_handler(CommandHandler("start", start))
 
