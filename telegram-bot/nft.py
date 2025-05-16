@@ -42,7 +42,6 @@ def base36decode(s):
 
 async def log_error(context, error_message):
     logging.error(f"Произошла ошибка: {error_message}")
-    # Отправка уведомления в админ-чат (если нужно)
     await context.bot.send_message(chat_id=588896602, text=f"Ошибка: {error_message}")
 
 from telegram.error import TimedOut, NetworkError
@@ -50,52 +49,41 @@ import asyncio
 
 async def send_telegram_message(context, chat_id, text):
     try:
-        # Отправляем сообщение в чат
         await context.bot.send_message(chat_id=chat_id, text=text)
     except TimedOut:
         print("Запрос к API Telegram завершился по таймауту.")
-        await asyncio.sleep(5)  # Ждём 5 секунд и пробуем снова
-        await send_telegram_message(context, chat_id, text)  # Повторная попытка
+        await asyncio.sleep(5)
+        await send_telegram_message(context, chat_id, text)
     except NetworkError as ne:
         print(f"Ошибка сети при отправке сообщения: {ne}")
-        # Можно добавить повторную попытку или уведомление об ошибке
     except Exception as e:
         print(f"Неизвестная ошибка: {e}")
 
 import time
 
-ADMIN_CHAT_ID = 588896602  # Замените на ваш реальный идентификатор админ-чата
+ADMIN_CHAT_ID = 588896602
 
 import asyncio
-import datetime  # Добавьте этот импорт
+import datetime
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     telegram_id = str(user.id)
 
-    # Проверяем, не является ли чат группой
     if update.message and update.message.chat.type in ["group", "supergroup"]:
         await update.message.reply_text(
             "Пожалуйста, используйте команду /start в личном сообщении со мной."
         )
         return
-    # Проверяем подписку пользователя
-    #subscribed = await check_subscription(update, context)
-    #if not subscribed:
-    #    return  # Пользователь не подписан, прекращаем выполнение
-
-    # Подключаемся к базе данных
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Проверяем, есть ли пользователь уже в таблице
     cursor.execute('SELECT telegram_id FROM users WHERE telegram_id = ?', (telegram_id,))
     existing_user = cursor.fetchone()
 
     if existing_user:
         await main_menu(update, context)
     else:
-        # Пользователя нет в таблице, отправляем приветственное сообщение
         message_text = (
             """🎁 Привет! Ты в NFT Gift Market — месте, где цифровые подарки обретают вторую жизнь.
 💎 Покупай и продавай NFT-подарки быстро и безопасно.
@@ -108,13 +96,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 Готов начать? Жми OPEN снизу и погнали!"""
         )
         chat_id = update.effective_chat.id
-        # Отправляем приветственное сообщение пользователю
         message = await context.bot.send_message(
             chat_id=chat_id,
             text=message_text,
         )
 
-        # Добавляем пользователя в таблицу Users
         registration_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cursor.execute('''
         INSERT INTO Users (name, username, telegram_id, registrationdate)
@@ -126,11 +112,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await main_menu(update, context)
 
-    # Удаляем сообщение пользователя
     if update.message:
         await update.message.delete()
 
-    # Закрываем соединение с базой данных
     conn.close()
 
 import string
@@ -166,7 +150,7 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     shopurl = f"https://fluxgifts.ru.tuna.am/user/{obfuscated_id}"
     channel_url = "https://t.me/sickboips"
-    chat_url = "https://t.me/sickboips"  # <-- замените на реальную ссылку вашего чата
+    chat_url = "https://t.me/sickboips"
     support_url = "https://t.me/sickboips"
 
     conn = get_db_connection()
@@ -175,7 +159,7 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     is_admin = cursor.fetchone() is not None
     conn.close()
 
-    # Формируем клавиатуру
+
     keyboard = [
         [InlineKeyboardButton("Открыть маркет", web_app=WebAppInfo(url=shopurl))],
         [InlineKeyboardButton("Информация", callback_data="info")],
@@ -238,7 +222,6 @@ async def main_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == 'main_menu':
         await main_menu(update, context)
 
-# Блок (25 шт.) - выбор товаров для блока
 import datetime
 import pytz
 import numpy as np
@@ -248,25 +231,20 @@ import os
 import calendar
 from telegram import Update
 from telegram.ext import ContextTypes
-orderschat = 588896602  # Приводим к целому числу # Приводим к целому числу
+orderschat = 588896602
 
 async def user_response_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     logging.info(f"Message from {user_id}")
     
-    # Если это групповой чат, выходим
     if update.message.chat.type in ["group", "supergroup"]:
         return
 
-    # Проверяем, ждём ли мы ответ для рассылки "не оформили заказ"
     if 'awaiting_responses' in context.bot_data and context.bot_data['awaiting_responses'].get(user_id):
-        # Старая логика (как в send_broadcast)
         try:
-            # Пересылаем сообщение администратору
             await context.bot.forward_message(chat_id=ADMIN_CHAT_ID2, from_chat_id=update.effective_chat.id, message_id=update.message.message_id)
             logging.info(f"Message {user_id} reposted to admin (broadcast).")
 
-            # Убираем пользователя из ожидания
             context.bot_data['awaiting_responses'][user_id] = False
             await update.message.reply_text("Ваше сообщение отправлено администрации. Спасибо!")
 
@@ -275,14 +253,12 @@ async def user_response_handler(update: Update, context: ContextTypes.DEFAULT_TY
             await update.message.reply_text("Произошла ошибка при отправке вашего сообщения. Попробуйте позже.")
         return
 
-    # Если мы попадаем сюда - значит пользователь что-то написал, но мы не ждём от него ответа
-    # Можно просто игнорировать или ответить
+
     logging.info(f"Message {user_id} not in 'responses' and 'wishes'.")
-        # --- Вызов ChatGPT ---
+
     user_text = update.message.text.strip()
     chatgpt_answer = generate_chatgpt_response(user_text)
 
-    # --- Отправка ответа пользователю ---
     await update.message.reply_text(chatgpt_answer)
 
 def main():
