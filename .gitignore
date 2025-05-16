@@ -1,1 +1,23 @@
-/node_modules
+# Node.js
+node_modules/
+dist/
+build/
+.cache/
+.env
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+env/
+venv/
+*.env
+
+# System / IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Others
+*.sqlite3
