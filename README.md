@@ -5,16 +5,15 @@ Telegram Mini-приложение для покупки и продажи по�
 
 ## Стек технологий
 
-- **Frontend**: JS(Telegram WebApp)
+- **Frontend**: React(Telegram WebApp)
 - **Backend**: Node.js(Express)
 - **Database**: MySQL
 - **Telegram Bot**: Python (aiogram / pyTelegramBotAPI)
 
 ## Установка и запуск
 
- Требуется Node.js
  ```
- npm run dev
+docker-compose up --build
  ```
 
 1. Клонируй репозиторий:
@@ -27,12 +26,27 @@ cd telegram-gift-marketplace
 ## Структура проекта
 ```
 telegram-gift-marketplace/
-├── frontend/       # Telegram WebApp (JS)
-├── backend/        # API (Node.js + Express)
-├── bot/            # Telegram Bot (Python)
-├── docs/           # Документация, схемы
-├── CHANGELOG.md
-└── README.md
+│
+├── backend/               # Node.js backend (Express + PostgreSQL)
+│   ├── controllers/       # Обработка запросов (API-логика)
+│   ├── routes/            # Эндпоинты API
+│   ├── models/            # Модели и работа с БД
+│   ├── migrations/        # SQL-миграции для создания таблиц
+│   ├── seed/              # Тестовые данные (наполнение БД)
+│   └── .env               # Переменные окружения
+
+├── bot/                   # Telegram-бот (Python или Node.js)
+│   ├── handlers/          # Логика команд и WebApp-запросов
+│   ├── main.py            # Точка входа
+│   └── .env               # BOT_TOKEN и настройки
+
+├── webapp/                # Веб-интерфейс (React/Vite)
+│   ├── src/               # Компоненты и Telegram WebApp SDK
+│   ├── public/
+│   └── .env               # API_URL и настройки WebApp
+
+├── README.md              # Документация проекта
+└── .gitignore             # Исключения Git
 ```
 
 
