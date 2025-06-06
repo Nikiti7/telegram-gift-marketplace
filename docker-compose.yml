@@ -6,12 +6,8 @@ services:
     container_name: backend_api
     ports:
       - "4000:4000"
-    environment:
-      DB_HOST: 217.114.8.21
-      DB_PORT: 3306
-      DB_USER: myuser
-      DB_PASSWORD: MyP@ssw0rd!
-      DB_NAME: nft
+    env_file:
+      - .env
     restart: always
 
   frontend:
@@ -26,9 +22,8 @@ services:
   telegram-bot:
     build: ./telegram-bot
     container_name: gift_bot
-    environment:
-      BOT_TOKEN: 8065763008:AAG8WSuwMiKYCArLiJhbkp0JosesLWmHLBs
-      API_URL: http://backend:4000  # URL к API, если внутри Docker-сети
+    env_file:
+      - .env
     depends_on:
       - backend
     restart: always
