@@ -2,6 +2,7 @@
   "name": "telegram_app",
   "version": "0.1.0",
   "private": true,
+  "homepage": "./",
   "dependencies": {
     "@telegram-apps/sdk": "^3.10.0",
     "@testing-library/dom": "^10.4.0",
@@ -39,6 +40,7 @@
     ]
   },
   "devDependencies": {
+    "prettier": "^3.5.3",
     "react-scripts": "^5.0.1"
   }
 }

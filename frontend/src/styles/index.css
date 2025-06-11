@@ -110,7 +110,6 @@ body {
   border: 1px solid #ffffff5e;
   border-radius: 8px;
   background-color: inherit;
-  z-index: -1;
 }
 
 .present__info {
