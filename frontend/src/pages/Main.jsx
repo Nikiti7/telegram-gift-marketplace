@@ -11,23 +11,38 @@ export default function Main() {
     const [balance, setBalance] = useState(0);
     const [searchTerm, setSearchTerm] = useState("");
     const [products, setProducts] = useState([]);
-
+		
     useEffect(() => {
-        fetch("http://localhost:4000/api/gifts")
-            .then(res => res.json())
-            .then(setProducts)
+      fetch("http://localhost:4000/api/gifts")
+        .then(res => res.json())
+        .then(data => {
+            console.log("Fetched products:", data);
+            if (Array.isArray(data)) {
+                setProducts(data);
+            } else {
+                console.error("Expected array, got:", data);
+                setProducts([]);
+            }
+        })
+        .catch(err => {
+            console.error("Failed to fetch products:", err);
+        });
     }, []);
 
-    const filtered = products.filter((p) =>
+
+    const filtered = Array.isArray(products)
+      ? products.filter((p) =>
         String(p.price).includes(searchTerm.trim())
-    );
+      )
+    : [];
+
 
     return (
         <div className="content">
             <Header balance={balance} setBalance={setBalance} />
             <main className="content">
                 <FiltersNav searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-                <ProductGrid products={products} onClick={() => {
+                <ProductGrid products={filtered} onClick={() => {
                     console.log('Card clicked!')
                 }}/>
             </main>
