@@ -177,7 +177,7 @@ body {
 
 .nav-tab {
   position: absolute;
-  left: 43%;
+  left: 41%;
   padding: 10px;
   border-radius: 50%;
   background-color: #5A46FF;
@@ -192,12 +192,11 @@ body {
 }
 
 .menu__item {
-  padding: 13px;
+  padding: 10px 13px 35px;
   border-radius: 50%;
   background-color: #2F2A65;
 }
 
 .menu__item img {
-  width: 35px;
-
+  width: 40px;
 }
