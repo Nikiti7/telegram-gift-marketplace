@@ -3,7 +3,10 @@ import {createPortal} from 'react-dom';
 import styles from './CardInfo.module.css';
 import back from '../../assets/icons/back.svg'
 import like from '../../assets/icons/favourite.svg'
-export default function CardInfo({isOpen, onClose, model, symbol, presentImg, price}) {
+import {useContext} from "react";
+import {CartContext} from "../../context/CartContext";
+export default function CardInfo({isOpen, onClose, model, symbol, presentImg, price, handleAddToCart}) {
+    const { addToCart } = useContext(CartContext);
     return createPortal(
         <AnimatePresence>
             {isOpen && (
@@ -23,7 +26,7 @@ export default function CardInfo({isOpen, onClose, model, symbol, presentImg, pr
                     >
                         <nav className={styles.controls}>
                             <button onClick={onClose}>
-                                <img src={back} style = {{}} alt='Иконка назад'/>
+                                <img src={back} alt='Иконка назад'/>
                             </button>
                             <button><img src={like} alt='Иконка понравилось'/></button>
                         </nav>
@@ -42,7 +45,7 @@ export default function CardInfo({isOpen, onClose, model, symbol, presentImg, pr
 
                         <footer className={styles.footer}>
                             <p>{price} руб</p>
-                            <button>Добавить в корзину</button>
+                            <button onClick={handleAddToCart}>Добавить в корзину</button>
                         </footer>
                     </motion.section>
                 </motion.div>

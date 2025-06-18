@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import tabMarket from "../../assets/icons/tab_market.svg";
 import tabBasket from "../../assets/icons/add2basket.svg";
-import tabFilters from "../../assets/icons/filters_sticks.svg"; // так как у вас установлен framer-motion
+import tabFilters from "../../assets/icons/filters_sticks.svg";
 
 export default function Nav() {
     const [isOpen, setIsOpen] = useState(true);
@@ -27,14 +28,14 @@ export default function Nav() {
                 <img src={tabMarket} alt="Маркет главная" />
             </motion.button>
             <div className="menu">
-                <button className="menu__item menu__basket" aria-label="Мои подарки">
+                <Link to="/cart" className="menu__item menu__basket" aria-label="Мои подарки">
                     <img src={tabBasket} alt="Корзина" />
-                </button>
+                </Link>
             </div>
             <div className="menu">
-                <button className="menu__item menu__filters" aria-label="Мои подарки">
+                <Link className="menu__item menu__filters" aria-label="Мои подарки">
                     <img src={tabFilters} alt="" />
-                </button>
+                </Link>
             </div>
         </motion.nav>
     );

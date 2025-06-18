@@ -5,9 +5,9 @@ import './WelcomeModal.css';
 import frogImage from '../../assets/welcomeAssets/images/present_frog.png';
 import hatImage from '../../assets/welcomeAssets/images/present_hat.png';
 import diamondImage from '../../assets/welcomeAssets/images/present_diamond.png';
-import frogBg from '../../assets/welcomeAssets/images/frog_bg.jpg';
-import hatBg from '../../assets/welcomeAssets/images/hat_bg.jpg';
-import diamondBg from '../../assets/welcomeAssets/images/diamond_bg.jpg';
+// import frogBg from '../../assets/welcomeAssets/images/frog_bg.jpg';
+// import hatBg from '../../assets/welcomeAssets/images/hat_bg.jpg';
+// import diamondBg from '../../assets/welcomeAssets/images/diamond_bg.jpg';
 import tapIcon from '../../assets/welcomeAssets/icons/tap_icon.svg';
 
 
@@ -61,17 +61,14 @@ const WelcomeModal = ({isOpen, onClose}) => {
                     >
                         <div className="stack">
                             <div className="card left">
-                                <img className="bg" src={diamondBg} alt=""/>
                                 <img className="item" src={diamondImage} alt=""/>
                             </div>
 
                             <div className="card right">
-                                <img className="bg" src={hatBg} alt=""/>
                                 <img className="item" src={hatImage} alt=""/>
                             </div>
 
                             <div className="card center">
-                                <img className="bg" src={frogBg} alt=""/>
                                 <img className="item" src={frogImage} alt=""/>
                             </div>
                         </div>

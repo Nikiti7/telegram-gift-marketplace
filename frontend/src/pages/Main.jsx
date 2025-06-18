@@ -28,7 +28,6 @@ export default function Main() {
             <main className="content">
                 <FiltersNav searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
                 <ProductGrid products={products} onClick={() => {
-                    console.log('Card clicked!')
                 }}/>
             </main>
             <Footer />
